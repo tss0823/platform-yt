@@ -1,0 +1,2 @@
+ytBeforeFilter=com.yuntao.platform.common.rpc.YtBeforeFilter
+ytAfterFilter=com.yuntao.platform.common.rpc.YtAfterFilter
