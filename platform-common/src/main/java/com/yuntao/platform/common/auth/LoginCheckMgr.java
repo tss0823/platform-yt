@@ -17,7 +17,7 @@ import java.lang.reflect.Method;
 @Component
 public class LoginCheckMgr {
 
-    @Autowired
+    @Autowired(required = false)
     private AuthUserService userService;
 
     public  AuthUser checkLogin(Method method){

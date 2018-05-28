@@ -18,7 +18,7 @@ public class AuthCheckMgr {
     @Autowired
     private CacheService cacheService;
 
-    @Autowired
+    @Autowired(required = false)
     private UserAuthResService userAuthResService;
 
 

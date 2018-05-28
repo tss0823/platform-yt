@@ -36,7 +36,7 @@ public class AuthAspect {
     @Autowired
     private LoginCheckMgr loginCheckMgr;
 
-    @Autowired
+    @Autowired(required = false)
     private AuthUserService userService;
 
     @Autowired
@@ -49,7 +49,7 @@ public class AuthAspect {
     public Object aroundController(final ProceedingJoinPoint joinPoint) throws Throwable {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         //start profile
-        if(!method.getName().equals("checkServerStatus")){
+        if (!method.getName().equals("checkServerStatus")) {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             String clsName = method.getDeclaringClass().getName();
             String methodName = method.getName();
@@ -60,8 +60,8 @@ public class AuthAspect {
         return authExecute(joinPoint);
     }
 
-    private Object authExecute(final ProceedingJoinPoint joinPoint)  throws Throwable{
-       //登录用户校验
+    private Object authExecute(final ProceedingJoinPoint joinPoint) throws Throwable {
+        //登录用户校验
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         AuthUser user = loginCheckMgr.checkLogin(method);
         //end
@@ -70,8 +70,8 @@ public class AuthAspect {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String appName = AppConfigUtils.getAppName();
         String requestURI = request.getRequestURI();
-        if(authCheck && user!= null && StringUtils.equals(appName,"bos") && !StringUtils.startsWith(requestURI,"/manager/")
-                && !StringUtils.startsWith(requestURI,"/trans/")){  //针对bos 校验
+        if (authCheck && user != null && StringUtils.equals(appName, "bos") && !StringUtils.startsWith(requestURI, "/manager/")
+                && !StringUtils.startsWith(requestURI, "/trans/")) {  //针对bos 校验
             if (!authCheckMgr.checkAuth(user, requestURI)) {
                 AuthException exception = new AuthException("您没有权限操作", SystemConstant.ResponseCode.NOT_AUTHORITY);
                 throw exception;
@@ -82,10 +82,10 @@ public class AuthAspect {
         //请求字段校验处理
         String genDoc = request.getParameter(SystemConstant.GEN_DOC);
         boolean isGenDoc = BooleanUtils.toBoolean(genDoc);
-        DocObject docObject = ParamValidateCheckMgr.processReqParam(joinPoint, request,isGenDoc);
+        DocObject docObject = ParamValidateCheckMgr.processReqParam(joinPoint, request, isGenDoc);
         //end
 
-        if(user != null){
+        if (user != null) {
             HbLogContextMgr.setUser(user.getUserId(), user.getMobile(), user.getUserName());
         }
         Object returnObj = joinPoint.proceed();
@@ -96,22 +96,22 @@ public class AuthAspect {
             ResponseObject responseObject = (ResponseObject) returnObj;
 //            Object data = responseObject.getData();  //这里是多级
             Map<String, Object> returnMap = new LinkedMap();
-            ParamValidateCheckMgr.processResData(responseObject,returnMap);
+            ParamValidateCheckMgr.processResData(responseObject, returnMap);
             docObject.setReturnObj(returnMap);
             responseObject.setData(docObject);
 //            docObject.setReturnMemoObj(returnObj);
         }
         //end
 
-        if(user == null){
+        if (user == null && userService != null) {
             Object sid = request.getAttribute(SystemConstant.USER_TOKEN);
-            if(sid != null){ //避免重复设置sid
+            if (sid != null ) { //避免重复设置sid
                 user = userService.getAuthUser(sid.toString());
-            }else{
+            } else {
                 user = userService.getAuthUser();
             }
         }
-        if(user != null){
+        if (user != null) {
             HbLogContextMgr.setUser(user.getUserId(), user.getMobile(), user.getUserName());
         }
         return returnObj;
